@@ -4,42 +4,69 @@ import requests
 
 st.set_page_config(page_title="Cybercrime & Forensics Dashboard", layout="wide")
 
-# ---------------------------
+# ---------------------------------
 # TITLE
-# ---------------------------
+# ---------------------------------
 st.title("🕵️ Cybercrime Intelligence & Forensics Dashboard")
+st.markdown("Analyze cybercrime trends and investigate suspicious network activity.")
 
-# ---------------------------
-# SIDEBAR (Widgets)
-# ---------------------------
+# ---------------------------------
+# SIDEBAR CONTROLS
+# ---------------------------------
 st.sidebar.header("Controls")
 
-region = st.sidebar.selectbox(
-    "Select Region",
-    ["Global", "USA", "Europe", "Asia"]
+crime_type = st.sidebar.selectbox(
+    "Select Cybercrime Type",
+    ["All", "Phishing", "Malware", "Ransomware"]
 )
 
 threshold = st.sidebar.slider(
-    "Suspicious Activity Threshold",
-    1, 100, 10
+    "Suspicious Request Threshold",
+    10, 200, 75
 )
 
-show_data = st.sidebar.checkbox("Show Raw Data")
+show_raw = st.sidebar.checkbox("Show Raw Data")
 
-# ---------------------------
-# SAMPLE DATA (we’ll replace later)
-# ---------------------------
-data = {
-    "IP": ["8.8.8.8", "1.1.1.1", "142.250.72.14", "172.217.3.110"],
-    "Requests": [50, 5, 80, 20]
+# ---------------------------------
+# CYBERCRIME TREND DATA (SIMULATED)
+# ---------------------------------
+st.header("📊 Cybercrime Trends")
+
+trend_data = pd.DataFrame({
+    "Month": ["Jan", "Feb", "Mar", "Apr", "May"],
+    "Phishing": [120, 150, 170, 200, 230],
+    "Malware": [80, 90, 100, 120, 140],
+    "Ransomware": [50, 60, 65, 70, 85]
+}).set_index("Month")
+
+st.line_chart(trend_data)
+
+st.info("Cybercrime incidents are increasing over time, especially phishing attacks.")
+
+# ---------------------------------
+# FORENSIC DATA (REALISTIC LOGS)
+# ---------------------------------
+st.header("🔍 Digital Forensics Case Analyzer")
+
+log_data = {
+    "IP": [
+        "8.8.8.8", "1.1.1.1", "142.250.72.14",
+        "172.217.3.110", "185.199.108.153",
+        "151.101.1.69", "192.168.1.1"
+    ],
+    "Requests": [45, 12, 180, 95, 30, 110, 10],
+    "Time": [
+        "10:00", "10:05", "10:10",
+        "10:15", "10:20", "10:25", "10:30"
+    ]
 }
 
-df = pd.DataFrame(data)
+df = pd.DataFrame(log_data)
 
-# ---------------------------
-# BUTTON
-# ---------------------------
-if st.button("Analyze Data"):
+# ---------------------------------
+# ANALYZE BUTTON
+# ---------------------------------
+if st.button("Analyze Case"):
 
     st.info("Fetching IP location data...")
 
@@ -47,7 +74,6 @@ if st.button("Analyze Data"):
     longitudes = []
     countries = []
 
-    # API CALL (IP → location)
     for ip in df["IP"]:
         try:
             response = requests.get(f"http://ip-api.com/json/{ip}").json()
@@ -59,45 +85,46 @@ if st.button("Analyze Data"):
             longitudes.append(0)
             countries.append("Error")
 
-    df["Latitude"] = latitudes
-    df["Longitude"] = longitudes
+    df["lat"] = latitudes
+    df["lon"] = longitudes
     df["Country"] = countries
 
     st.success("Analysis Complete!")
 
-    # ---------------------------
+    # ---------------------------------
     # TABLE
-    # ---------------------------
-    st.subheader("📋 Data Table")
+    # ---------------------------------
+    st.subheader("📋 Network Activity Table")
     st.dataframe(df)
 
-    # ---------------------------
-    # CHART
-    # ---------------------------
+    # ---------------------------------
+    # BAR CHART
+    # ---------------------------------
     st.subheader("📊 Requests per IP")
     st.bar_chart(df.set_index("IP")["Requests"])
 
-    # ---------------------------
+    # ---------------------------------
     # MAP
-    # ---------------------------
-    st.subheader("🌍 IP Locations")
-    map_data = df[["Latitude", "Longitude"]]
-    st.map(map_data)
+    # ---------------------------------
+    st.subheader("🌍 IP Geolocation Map")
+    st.map(df[["lat", "lon"]])
 
-    # ---------------------------
-    # FORENSIC LOGIC (simple but powerful)
-    # ---------------------------
+    # ---------------------------------
+    # SUSPICIOUS DETECTION
+    # ---------------------------------
     suspicious = df[df["Requests"] > threshold]
 
+    st.subheader("🚨 Suspicious Activity Detection")
+
     if not suspicious.empty:
-        st.warning("⚠️ Suspicious activity detected!")
+        st.warning("⚠️ Suspicious IPs Detected!")
         st.write(suspicious)
     else:
         st.success("No suspicious activity detected.")
 
-    # ---------------------------
-    # OPTIONAL TOGGLE
-    # ---------------------------
-    if show_data:
-        st.write("Raw Data:")
+    # ---------------------------------
+    # OPTIONAL RAW DATA
+    # ---------------------------------
+    if show_raw:
+        st.subheader("Raw Data")
         st.write(df)
