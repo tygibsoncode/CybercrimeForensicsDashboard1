@@ -23,7 +23,7 @@ threshold = st.sidebar.slider(
 show_raw = st.sidebar.checkbox("Show Raw Data")
 
 # ---------------------------------
-# CYBERCRIME NEWS + ANALYSIS
+# CYBERCRIME NEWS + ANALYSIS (FIXED)
 # ---------------------------------
 st.header("📰 Live Cybercrime Intelligence")
 
@@ -34,7 +34,8 @@ crime_filter = st.selectbox(
     ["All", "Phishing", "Ransomware", "Malware", "Hacking"]
 )
 
-query = "cybercrime OR hacking OR ransomware OR phishing OR malware"
+# BETTER QUERY (less junk results)
+query = '"cyber attack" OR cybersecurity OR "data breach" OR ransomware OR phishing OR malware'
 
 if crime_filter != "All":
     query = crime_filter.lower()
@@ -50,8 +51,22 @@ if response.status_code == 200:
     data = response.json()
     articles = data.get("articles", [])
 
+    # -------- FILTER OUT JUNK --------
+    filtered_articles = []
+    for article in articles:
+        text = (article["title"] or "").lower() + " " + (article["description"] or "").lower()
+
+        if any(keyword in text for keyword in [
+            "attack", "breach", "cyber", "security",
+            "malware", "ransomware", "phishing"
+        ]):
+            filtered_articles.append(article)
+
+    articles = filtered_articles
+
     if articles:
 
+        # -------- ANALYSIS COUNTS --------
         for article in articles:
             text = (article["title"] or "").lower() + " " + (article["description"] or "").lower()
 
@@ -61,10 +76,10 @@ if response.status_code == 200:
                 ransomware_count += 1
             if "malware" in text:
                 malware_count += 1
-            if "hack" in text:
+            if "hack" in text or "breach" in text:
                 hacking_count += 1
 
-        # Chart
+        # -------- CHART --------
         count_df = pd.DataFrame({
             "Type": ["Phishing", "Ransomware", "Malware", "Hacking"],
             "Count": [phishing_count, ransomware_count, malware_count, hacking_count]
@@ -73,7 +88,7 @@ if response.status_code == 200:
         st.subheader("📊 Cybercrime Type Distribution")
         st.bar_chart(count_df)
 
-        # Trending threat
+        # -------- TRENDING THREAT --------
         trend_counts = {
             "Phishing": phishing_count,
             "Ransomware": ransomware_count,
@@ -86,7 +101,7 @@ if response.status_code == 200:
         st.subheader("🔥 Current Trending Threat")
         st.warning(f"Most reported threat: {trending_threat}")
 
-        # Show articles
+        # -------- ARTICLES --------
         st.subheader("🗞️ Latest Articles")
         for article in articles[:5]:
             st.markdown(f"### {article['title']}")
@@ -94,10 +109,10 @@ if response.status_code == 200:
             st.markdown(f"[Read more]({article['url']})")
             st.write("---")
 
-        st.success("Live cybercrime data analyzed successfully!")
+        st.success("Filtered and analyzed live cybercrime data!")
 
     else:
-        st.warning("No articles found.")
+        st.warning("No relevant cybercrime articles found.")
 else:
     st.error("Failed to fetch news data.")
 
@@ -131,14 +146,14 @@ if uploaded_file is not None:
 else:
     st.info("Using default sample data.")
 
-# VALIDATION
+# VALIDATE FILE
 required_columns = {"IP", "Requests", "Time"}
 
 if not required_columns.issubset(df.columns):
     st.error("CSV must contain columns: IP, Requests, Time")
     st.stop()
 
-# Example format
+# Example CSV
 with st.expander("📄 Example CSV Format"):
     st.code("""IP,Requests,Time
 8.8.8.8,50,10:00
@@ -199,13 +214,13 @@ if st.button("Analyze Case"):
             st.error("High ransomware activity globally. Investigate immediately.")
 
         elif trending_threat == "Phishing":
-            st.warning("Phishing attacks trending. Check for unusual access patterns.")
+            st.warning("Phishing attacks trending. Check unusual access patterns.")
 
         elif trending_threat == "Malware":
             st.warning("Malware threats increasing. Monitor repeated requests.")
 
         elif trending_threat == "Hacking":
-            st.error("Hacking attempts rising. Possible intrusion detected.")
+            st.error("Hacking attempts rising. Possible intrusion.")
 
         st.write(suspicious)
 
