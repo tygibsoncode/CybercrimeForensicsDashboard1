@@ -102,7 +102,7 @@ if response.status_code == 200:
 else:
     st.error("Failed to fetch news data.")
 
-st.header("🔍 Digital Forensics Case Analyzer")
+st.header("Digital Forensics Case Analyzer")
 
 default_data = {
     "IP": [
