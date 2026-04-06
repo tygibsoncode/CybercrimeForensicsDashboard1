@@ -73,7 +73,7 @@ if response.status_code == 200:
             "Count": [phishing_count, ransomware_count, malware_count, hacking_count]
         }).set_index("Type")
 
-        st.subheader("📊 Cybercrime Type Distribution")
+        st.subheader("Cybercrime Type Distribution")
         st.bar_chart(count_df)
 
         trend_counts = {
@@ -88,7 +88,7 @@ if response.status_code == 200:
         st.subheader("Current Trending Threat")
         st.warning(f"Most reported threat: {trending_threat}")
 
-        st.subheader("🗞️ Latest Articles")
+        st.subheader("Latest Articles")
         for article in articles[:5]:
             st.markdown(f"### {article['title']}")
             st.write(article["description"])
